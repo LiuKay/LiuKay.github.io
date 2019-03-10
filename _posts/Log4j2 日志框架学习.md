@@ -3,8 +3,8 @@ layout:     post
 title:      Log4j2 学习笔记
 subtitle:   Log4j2 学习笔记
 date:       2019-01-24
-author:     BY
-# header-img: img/post-bg-ios9-web.jpg
+author:     by kayfen
+header-img: img/post-bg-ios9-web.jpg
 catalog: true
 tags:
     - Java
@@ -14,7 +14,7 @@ tags:
 
 
 
-### Log4j2 学习笔记
+# Log4j2 学习笔记
 
 #### 1 Log4j2主要类图
 
