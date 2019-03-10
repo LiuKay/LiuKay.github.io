@@ -1,4 +1,20 @@
-﻿### Log4j2 学习笔记
+﻿---
+layout:     post
+title:      Log4j2 学习笔记
+subtitle:   Log4j2 学习笔记
+date:       2019-01-24
+author:     BY
+# header-img: img/post-bg-ios9-web.jpg
+catalog: true
+tags:
+    - Java
+    - Log4j2
+    - 日志
+---
+
+
+
+### Log4j2 学习笔记
 
 #### 1 Log4j2主要类图
 
