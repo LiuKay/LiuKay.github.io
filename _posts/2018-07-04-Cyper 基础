@@ -1,0 +1,217 @@
+### Cypher
+Cypher是图形数据库`Neo4j`的查询语言，就像SQL在关系型数据库中查询一样。
+> Like SQL, used in relational databases, Cypher is a textual declarative query language 
+
+本篇以官方示例以及一些小Demo记录Cypher的基本用法，需要详细资料可以前往官方文档学习。
+[https://neo4j.com/docs/developer-manual/3.4/cypher/](https://neo4j.com/docs/developer-manual/3.4/cypher/)
+
+### 0 问题
+
+- Cypher基本增删查改
+- Cypher 怎么导入数据
+### 1 基本CQL语句：
+
+```cql
+--创建节点
+CREATE (p:Person { name:"Keanu Reeves", born:1964 })
+--创建节点和关系
+CREATE (p:Person{name:"kay"})-[:KNOWS]->(:Person{name:"Keanu Reeves"}) return p
+
+--查询
+match (p:Person) where p.name="kay" return p
+--或者
+match (p:Person{name:"kay"}) return p
+--查询关系路径
+match path=(p:Person{name:"kay"})-[:KNOWS]->(p:Person) return path
+
+--修改
+match (p:Person) where p.name="kay" set p.name="fen" return p
+
+--删除
+match (p:Person) where p.name="kay" delete p
+
+--彻底删除（清空数据库，包括关系）
+MATCH (n) DETACH DELETE n
+```
+
+以官方Movies 示例：
+1.创建2个Person节点，一个Movie节点，建立关系，节点的属性以键值对的形式存储 {key:value}
+
+```cql
+CREATE (a:Person { name:"Tom Hanks",
+  born:1956 })-[r:ACTED_IN { roles: ["Forrest"]}]->(m:Movie { title:"Forrest Gump",released:1994 })
+CREATE (d:Person { name:"Robert Zemeckis", born:1951 })-[:DIRECTED]->(m)
+RETURN a,d,r,m
+```
+
+得到如下关系：
+
+![alt](https://neo4j.com/docs/developer-manual/current/images/cypherdoc-result-b3411d1d.svg) 
+
+查询：
+
+```cql
+--查询
+MATCH (nineties:Movie) WHERE nineties.released >= 1990 AND nineties.released < 2000 RETURN nineties.title
+
+--查询 Tom Hanks 演过的所有电影
+MATCH (tom:Person {name: "Tom Hanks"})-[:ACTED_IN]->(tomHanksMovies) RETURN tom,tomHanksMovies
+
+
+--谁导演了 Forrest Gump
+MATCH (movie {title: "Forrest Gump"})<-[:DIRECTED]-(directors) RETURN directors.name
+
+--Tom Hanks' co-actors...
+MATCH (tom:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors) RETURN coActors.name
+
+--How people are related to "Forrest Gump"...
+MATCH (people:Person)-[relatedTo]-(:Movie {title: "Forrest Gump"}) RETURN people.name, Type(relatedTo), relatedTo
+```
+
+### 2 Match
+
+Match 类似与SQL中的Select ，用来匹配一种搜索模式
+
+以官网下图说明：
+
+![alt](https://neo4j.com/docs/developer-manual/3.4/images/MATCH-3.svg)
+
+2.1 查询所有节点
+
+```cql
+MATCH (n)
+RETURN n
+```
+
+2.2 查询所有电影 Movie 标签
+
+```
+MATCH (movie:Movie)
+RETURN movie.title
+```
+
+：Movie 之前 的 movie 称为临时变量，代表符合条件的一个结果，可以取任何名称
+
+### 3 Merge
+
+使用Create关键字创建节点和关系的时候不能避免重复，每次都是新建，即使该数据已经存在数据库中，对此可以使用Merge关键字，Merge类似于Match + Create ，如果存在就直接使用，不存在则创建。
+
+3.1 Query. 
+
+```cql
+MERGE (robert:Critic)
+RETURN robert, labels(robert)
+```
+
+如果 :Critic 标签的记录存在则返回，不存在则创建一个新的节点
+
+##### 3.1 Merge with `ON CREATE`:
+
+```
+MERGE (keanu:Person { name: 'Keanu Reeves' })
+ON CREATE SET keanu.created = timestamp()
+RETURN keanu.name, keanu.created
+```
+
+如果 keanu 不存在则创建它并添加一个created属性为当前时间戳
+
+##### 3.2 Merge with `ON MATCH`
+
+```
+MERGE (person:Person)
+ON MATCH SET person.found = TRUE RETURN person.name, person.found
+```
+
+找到所有的Person节点，并设置属性（如果不存在不创建新节点）
+
+##### 3.3 Merge with `ON CREATE` and `ON MATCH`
+
+```
+MERGE (keanu:Person { name: 'Keanu Reeves' })
+ON CREATE SET keanu.created = timestamp()
+ON MATCH SET keanu.lastSeen = timestamp()
+RETURN keanu.name, keanu.created, keanu.lastSeen
+```
+
+创建keanu节点，并设置created属性。如果keanu已经存在，则设置lastSeen属性。这里其实是2种情况。
+
+### 4 UNWIND
+
+- 将列表转换为单独的行进行操作。
+
+```cql
+-- 列表去重
+WITH [1, 1, 2, 2] AS coll
+UNWIND coll AS x
+WITH DISTINCT x
+RETURN collect(x) AS setOfVals
+```
+
+- 拼接列表：
+
+```cql
+-- 连接2个列表然后输出
+WITH [1, 2] AS a,[3, 4] AS b
+UNWIND (a + b) AS x
+RETURN x
+```
+
+- 将嵌套的list平铺：
+
+```cql
+WITH [[1, 2],[3, 4], 5] AS nested
+UNWIND nested AS x
+UNWIND x AS y
+RETURN 
+-- 输出 y:1 2 3 4 5
+```
+
+- UNWIND如果作用于空列表则没有返回值，为了避免无意识的对空集合进行UNWID，可以使用case来判断：
+
+```cql
+WITH [] AS list
+UNWIND
+   CASE
+      WHEN list = []
+         THEN [null]
+      ELSE list
+   END AS emptylist
+RETURN emptylist
+```
+
+- 可以代替FOREACH操作传入的list参数
+
+```cql
+UNWIND $events AS event
+MERGE (y:Year { year: event.year })
+MERGE (y)<-[:IN]-(e:Event { id: event.id })
+RETURN e.id AS x
+ORDER BY x
+```
+
+### 5 Cypher 导入CSV数据
+
+导入Person数据，新建Person节点：
+
+```cql
+LOAD CSV WITH HEADERS FROM "https://neo4j.com/docs/developer-manual/3.4/csv/import/persons.csv" AS csvLine
+CREATE (p:Person { id: toInteger(csvLine.id), name: csvLine.name })
+```
+
+person.csv格式如下：
+
+```csv
+id,name
+1,Charlie Sheen
+2,Oliver Stone
+3,Michael Douglas
+4,Martin Sheen
+5,Morgan Freeman
+```
+
+如此便导入5个Person节点，Person { id,name },属性有id和name
+
+
+
+
+
