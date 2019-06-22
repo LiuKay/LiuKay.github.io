@@ -3,7 +3,7 @@ title: kayfen
 SEOTitle: LiuKay的博客 | kayfen
 header-img: img/post-bg-desk.jpg
 email: notserious41@gmail.com
-description: "Every failure is leading towards success."
+description: "他强任他强，清风拂山岗；他横任他横，明月照大江"
 keyword: "LiuKay的博客, kayfen, 刘凯, kaybee, liukay"
 url: "http://liukay.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
@@ -31,7 +31,7 @@ anchorjs: true                          # if you want to customize anchor. check
 # Gems
 # from PR#40, to support local preview for Jekyll 3.0
 gems: [jekyll-paginate]
-
+plugins: [jekyll-paginate]
 
 # Markdown settings
 # replace redcarpet to kramdown,
@@ -78,3 +78,15 @@ featured-condition-size: 1              # 相同标签数量大于这个数，�
 # Progressive Web Apps
 chrome-tab-theme-color: "#000000"
 service-worker: true
+
+# Friends
+#friends: [
+#{
+#  title: "BY Blog",
+#  href: "https://qiubaiying.github.io/"
+#},
+#{
+#  title: "Apple",
+#  href: "https://apple.com/"
+#}
+#]
