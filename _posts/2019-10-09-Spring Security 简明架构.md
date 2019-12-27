@@ -1,7 +1,7 @@
 ---
 layout:     post
 title:      Spring Security简明架构
-subtitle:   log4j2日志框架学习
+subtitle:   
 date:       2019-10-09
 author:     Kaybee
 header-img: img/post-bg-re-vs-ng2.jpg
